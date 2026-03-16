@@ -1,0 +1,24 @@
+name: Package and Release ProcTracker
+
+on:
+    push:
+        tags:
+            - "v*" # Se déclenche uniquement quand tu pousses un tag (ex: git tag v1.0.0)
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0 # Requis pour que le packager lise l'historique des commits
+
+            - name: Package Addon
+              uses: BigWigsMods/packager@v2
+              env:
+                  # Les tokens de publication sont injectés de manière sécurisée depuis les GitHub Secrets.
+                  # Ne jamais écrire ces tokens en dur ici.
+                  CF_API_KEY: ${{ secrets.CF_API_KEY }}
+                  WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
+                  GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}

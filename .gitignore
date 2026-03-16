@@ -1,0 +1,18 @@
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Fichiers d'environnement et secrets locaux
+.env
+.env.local
+
+# Fichiers générés par le jeu (si testé hors symlink par erreur)
+*.bak
+SavedVariables/
+Bindings.xml
+
+# Dossiers de build (générés par le CI/CD en local si tu testes le script)
+.release/
+ProcTracker_*.zip

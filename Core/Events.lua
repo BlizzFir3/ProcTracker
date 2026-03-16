@@ -36,6 +36,15 @@ local function UpdatePlayerAuras()
         print("ProcTracker ERREUR : PT.UI.UpdateEclipseState est introuvable !")
     end
 end
+if SpellActivationOverlayFrame and SpellActivationOverlayFrame.ShowOverlay then
+    hooksecurefunc(SpellActivationOverlayFrame, "ShowOverlay", function(self, spellID, texturePath, position, scale, r, g, b)
+        if spellID == 48517 or spellID == 48518 then
+            if PT and PT.UI and type(PT.UI.UpdateOverlayAsset) == "function" then
+                PT.UI.UpdateOverlayAsset(spellID, texturePath)
+            end
+        end
+    end)
+end
 
 eventsFrame:SetScript("OnEvent", function(self, event, unitTarget)
     if event == "PLAYER_LOGIN" then

@@ -1,7 +1,6 @@
-local addonName, addonTable = ...
-local PT = addonTable.PT
-
--- General configuration for ProcTracker
+local addonName, PT = ...
+PT.Config = PT.Config or {}
+PT.Config.TotalEclipseTimerSide = "LEFT"
 PT.Constants = {
     UI = {
         FRAME_WIDTH = 120,

@@ -1,96 +1,74 @@
-local addonName, addonTable = ...
-local PT = addonTable.PT
+local addonName, PT = ...
 
+PT.UI = PT.UI or {}
+
+-- Cache global functions
 local CreateFrame = CreateFrame
 local GetTime = GetTime
 local UIParent = UIParent
-local pairs = pairs
+local print = print
+local string = string
 
-PT.UI.Display = PT.UI.Display or {}
+-- Création de l'UI (La Vue)
+PT.UI.Frame = CreateFrame("Frame", "ProcTrackerCanvas", UIParent)
+PT.UI.Frame:SetSize(200, 100)
+PT.UI.Frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+PT.UI.Frame:Hide()
 
-PT.UI.Display.frames = {}
-PT.UI.Display.activeFrames = {}
+-- Texture Solaire
+PT.UI.solarTex = PT.UI.Frame:CreateTexture(nil, "OVERLAY")
+PT.UI.solarTex:SetSize(64, 64)
+PT.UI.solarTex:SetPoint("CENTER", PT.UI.Frame, "CENTER", -50, 0)
+PT.UI.solarTex:SetTexture([[Interface\SpellActivationOverlay\Icon_Druid_Solar]])
+-- Fond de couleur garanti pour le debug si la texture Blizzard échoue
+PT.UI.solarTex:SetColorTexture(1, 0.8, 0, 0.8)
+PT.UI.solarTex:Hide()
 
-local mainFrame = CreateFrame("Frame", "ProcTrackerCanvas", UIParent)
-mainFrame:SetSize(300, 150)
-mainFrame:SetPoint("CENTER", 0, 150)
-mainFrame:Hide()
+-- Texture Lunaire
+PT.UI.lunarTex = PT.UI.Frame:CreateTexture(nil, "OVERLAY")
+PT.UI.lunarTex:SetSize(64, 64)
+PT.UI.lunarTex:SetPoint("CENTER", PT.UI.Frame, "CENTER", 50, 0)
+PT.UI.lunarTex:SetTexture([[Interface\SpellActivationOverlay\Icon_Druid_Lunar]])
+-- Fond de couleur garanti pour le debug si la texture Blizzard échoue
+PT.UI.lunarTex:SetColorTexture(0, 0.8, 1, 0.8)
+PT.UI.lunarTex:Hide()
 
-PT.UI.Display.frame = mainFrame
+-- Timer Text
+PT.UI.Frame.timerText = PT.UI.Frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+PT.UI.Frame.timerText:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
+PT.UI.Frame.timerText:SetPoint("BOTTOM", PT.UI.Frame, "BOTTOM", 0, 0)
 
-mainFrame:SetScript("OnUpdate", function(self, elapsed)
-    local currentTime = GetTime()
-    local hasActiveProc = false
-    
-    for spellID, indicator in pairs(PT.UI.Display.activeFrames) do
-        if indicator.isActive then
-            local timeLeft = indicator.expirationTime - currentTime
-            if timeLeft > 0 then
-                indicator.text:SetFormattedText("%.1f", timeLeft)
-                hasActiveProc = true
-            else
-                PT.UI.Display.UpdateState(spellID, false, 0)
-            end
-        end
-    end
-    
-    if not hasActiveProc then
-        self:Hide()
+-- Le Moteur de Rendu (Le Contrôleur)
+local activeExpirationTime = 0
+
+PT.UI.Frame:SetScript("OnUpdate", function(self, elapsed)
+    local timeLeft = activeExpirationTime - GetTime()
+    if timeLeft > 0 then
+        self.timerText:SetText(string.format("%.1f", timeLeft))
+    else
+        self:Hide() -- Sécurité : coupe l'UI si le temps est écoulé
     end
 end)
 
-function PT.UI.Display.CheckAndStartLoop()
-    if not mainFrame:IsShown() then
-        mainFrame:Show()
-    end
-end
+-- L'API d'entrée (UpdateEclipseState)
+function PT.UI.UpdateEclipseState(solarAura, lunarAura)
+    -- Log pour le debug du déclenchement
+    print("ProcTracker: UpdateEclipseState appelé avec Solaire:", solarAura ~= nil, "Lunaire:", lunarAura ~= nil)
 
-function PT.UI.Display.Initialize(classProcs)
-    for spellID, config in pairs(classProcs) do
-        local display = CreateFrame("Frame", "ProcTrackerIndicator_" .. spellID, mainFrame)
-        display:SetSize(128, 128)
-        
-        if spellID == 48517 then -- Eclipse Solaire
-            display:SetPoint("CENTER", UIParent, "CENTER", -150, 0)
-        elseif spellID == 48518 then -- Eclipse Lunaire
-            display:SetPoint("CENTER", UIParent, "CENTER", 150, 0)
-        else
-            display:SetPoint("CENTER", UIParent, "CENTER", config.offsetX, config.offsetY)
-        end
-        
-        display.texture = display:CreateTexture(nil, "BACKGROUND")
-        display.texture:SetSize(128, 128)
-        display.texture:SetPoint("CENTER", 0, 0)
-        display.texture:SetTexture(config.texture)
-        display.texture:SetBlendMode("ADD")
-        
-        display.text = display:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        display.text:SetFont("Fonts\\FRIZQT__.TTF", 20, "OUTLINE")
-        display.text:SetPoint("CENTER", 0, -40)
-        display:Hide()
-        
-        PT.UI.Display.frames[spellID] = {
-            frame = display,
-            text = display.text,
-            isActive = false,
-            expirationTime = 0
-        }
-    end
-end
-
-function PT.UI.Display.UpdateState(spellID, isActive, expirationTime)
-    local indicator = PT.UI.Display.frames[spellID]
-    if not indicator then return end
-    
-    indicator.isActive = isActive
-    indicator.expirationTime = expirationTime or 0
-    
-    if isActive then
-        indicator.frame:Show()
-        PT.UI.Display.activeFrames[spellID] = indicator
-        PT.UI.Display.CheckAndStartLoop()
+    if solarAura then
+        activeExpirationTime = solarAura.expirationTime or 0
+        PT.UI.solarTex:Show()
+        PT.UI.lunarTex:Hide()
+        PT.UI.Frame:Show()
+    elseif lunarAura then
+        activeExpirationTime = lunarAura.expirationTime or 0
+        PT.UI.solarTex:Hide()
+        PT.UI.lunarTex:Show()
+        PT.UI.Frame:Show()
     else
-        indicator.frame:Hide()
-        PT.UI.Display.activeFrames[spellID] = nil
+        -- Aucune aura active
+        PT.UI.solarTex:Hide()
+        PT.UI.lunarTex:Hide()
+        PT.UI.Frame:Hide()
     end
 end

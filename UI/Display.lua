@@ -29,6 +29,7 @@ UpdatePosition()
 PT.UI.solarTex = PT.UI.Frame:CreateTexture(nil, "OVERLAY")
 PT.UI.solarTex:SetSize(200, 200)
 PT.UI.solarTex:SetPoint("LEFT", PT.UI.Frame, "CENTER", 50, 0)
+PT.UI.solarTex:SetTexture(nil)
 PT.UI.solarTex:SetBlendMode("ADD")
 PT.UI.solarTex:Hide()
 
@@ -36,6 +37,7 @@ PT.UI.solarTex:Hide()
 PT.UI.lunarTex = PT.UI.Frame:CreateTexture(nil, "OVERLAY")
 PT.UI.lunarTex:SetSize(200, 200)
 PT.UI.lunarTex:SetPoint("RIGHT", PT.UI.Frame, "CENTER", -50, 0)
+PT.UI.lunarTex:SetTexture(nil)
 PT.UI.lunarTex:SetBlendMode("ADD")
 PT.UI.lunarTex:Hide()
 
@@ -57,28 +59,42 @@ PT.UI.Frame:SetScript("OnUpdate", function(self, elapsed)
         self.timerText:SetText("")
     end
 end)
-function PT.UI.UpdateOverlayAsset(spellID, texturePath)
-    local targetTex = (spellID == 48517) and PT.UI.solarTex or PT.UI.lunarTex
+
+-- L'API d'entree (UpdateEclipseState avec Routage Dynamique)
+PT.CapturedAssets = PT.CapturedAssets or {}
+
+function PT.UI.UpdateOverlayAsset(auraSpellID, atlas, tex)
+    PT.CapturedAssets[auraSpellID] = { atlas = atlas, tex = tex }
+    local targetTex = (auraSpellID == 48517) and PT.UI.solarTex or PT.UI.lunarTex
     
-    -- Nettoyage préalable
+    if not targetTex then return end
+    
     targetTex:SetTexture(nil)
     targetTex:SetAtlas(nil)
     
-    -- Application dynamique (Atlas vs Texture)
-    if type(texturePath) == "string" and not string.find(string.lower(texturePath), "interface") then
-        targetTex:SetAtlas(texturePath)
-    else
-        targetTex:SetTexture(texturePath)
+    if atlas then
+        targetTex:SetAtlas(atlas)
+    elseif tex then
+        targetTex:SetTexture(tex)
     end
+    targetTex:SetBlendMode("ADD")
 end
 
--- L'API d'entree (UpdateEclipseState avec Routage Dynamique)
 function PT.UI.UpdateEclipseState(solarAura, lunarAura)
+    if solarAura then
+        PT.UI.solarTex:Show()
+    else
+        PT.UI.solarTex:Hide()
+    end
+    
+    if lunarAura then
+        PT.UI.lunarTex:Show()
+    else
+        PT.UI.lunarTex:Hide()
+    end
+
     if solarAura and lunarAura then
         -- Les DEUX sont actives
-        PT.UI.solarTex:Show()
-        PT.UI.lunarTex:Show()
-        
         -- Routage configurable du timer inversé
         if PT.Config.TotalEclipseTimerSide == "LEFT" then
             activeExpirationTime = (lunarAura.expirationTime and lunarAura.expirationTime > 0) and lunarAura.expirationTime or (GetTime() + 15)
@@ -94,8 +110,6 @@ function PT.UI.UpdateEclipseState(solarAura, lunarAura)
     elseif solarAura then
         -- SEULEMENT Solaire
         activeExpirationTime = (solarAura.expirationTime and solarAura.expirationTime > 0) and solarAura.expirationTime or (GetTime() + 15)
-        PT.UI.solarTex:Show()
-        PT.UI.lunarTex:Hide()
         PT.UI.Frame.timerText:ClearAllPoints()
         PT.UI.Frame.timerText:SetPoint("TOP", PT.UI.solarTex, "BOTTOM", 0, -10)
         PT.UI.Frame:Show()
@@ -103,16 +117,12 @@ function PT.UI.UpdateEclipseState(solarAura, lunarAura)
     elseif lunarAura then
         -- SEULEMENT Lunaire
         activeExpirationTime = (lunarAura.expirationTime and lunarAura.expirationTime > 0) and lunarAura.expirationTime or (GetTime() + 15)
-        PT.UI.solarTex:Hide()
-        PT.UI.lunarTex:Show()
         PT.UI.Frame.timerText:ClearAllPoints()
         PT.UI.Frame.timerText:SetPoint("TOP", PT.UI.lunarTex, "BOTTOM", 0, -10)
         PT.UI.Frame:Show()
         
     else
         -- AUCUNE aura logic
-        PT.UI.solarTex:Hide()
-        PT.UI.lunarTex:Hide()
         PT.UI.Frame.timerText:SetText("")
         PT.UI.Frame:Hide()
     end

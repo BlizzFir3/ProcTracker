@@ -7,6 +7,7 @@ local UnitClassBase = UnitClassBase or UnitClass
 local pairs = pairs
 local type = type
 local print = print
+local hooksecurefunc = hooksecurefunc
 
 PT.Core = PT.Core or {}
 PT.Core.Events = PT.Core.Events or {}
@@ -36,15 +37,6 @@ local function UpdatePlayerAuras()
         print("ProcTracker ERREUR : PT.UI.UpdateEclipseState est introuvable !")
     end
 end
-if SpellActivationOverlayFrame and SpellActivationOverlayFrame.ShowOverlay then
-    hooksecurefunc(SpellActivationOverlayFrame, "ShowOverlay", function(self, spellID, texturePath, position, scale, r, g, b)
-        if spellID == 48517 or spellID == 48518 then
-            if PT and PT.UI and type(PT.UI.UpdateOverlayAsset) == "function" then
-                PT.UI.UpdateOverlayAsset(spellID, texturePath)
-            end
-        end
-    end)
-end
 
 eventsFrame:SetScript("OnEvent", function(self, event, unitTarget)
     if event == "PLAYER_LOGIN" then
@@ -67,3 +59,29 @@ eventsFrame:SetScript("OnEvent", function(self, event, unitTarget)
         end
     end
 end)
+
+if SpellActivationOverlayFrame and SpellActivationOverlayFrame.ShowOverlay then
+    hooksecurefunc(SpellActivationOverlayFrame, "ShowOverlay", function(self, spellID)
+        -- Détection sur les canaux graphiques ET métier
+        local isSolar = (spellID == 48517 or spellID == 93430)
+        local isLunar = (spellID == 48518 or spellID == 93431)
+        
+        if isSolar or isLunar then
+            local auraSpellID = isSolar and 48517 or 48518 -- Normalisation vers l'ID de l'Aura
+            if self.overlayPool then
+                for overlay in self.overlayPool:EnumerateActive() do
+                    if overlay.spellID == spellID and overlay.texture then
+                        local atlas = overlay.texture:GetAtlas()
+                        local tex = overlay.texture:GetTexture()
+                        
+                        if PT and PT.UI and type(PT.UI.UpdateOverlayAsset) == "function" then
+                            PT.UI.UpdateOverlayAsset(auraSpellID, atlas, tex)
+                        end
+                        
+                        overlay:SetAlpha(0) -- Masque le composant d'origine sans le détruire en mémoire
+                    end
+                end
+            end
+        end
+    end)
+end

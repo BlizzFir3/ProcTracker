@@ -12,26 +12,24 @@ PT.Constants = {
         TIMER_OFFSET_Y = -40,
         DEFAULT_BLEND = "ADD",
     },
-    
+
     -- Define procs dynamically per class
     -- The keys represent the standard WoW class internal names (e.g., DRUID, MAGE, WARRIOR)
     PROCS = {
         DRUID = {
-            -- Solar Eclipse
+            -- Solar Eclipse (Ancré à droite)
             [48517] = {
-                texture = "Interface\\SpellActivationOverlay\\Eclipse_Sun",
-                offsetX = -120,
+                texture = 237562, -- FileDataID exact
+                offsetX = 120,
                 offsetY = 0,
             },
-            -- Lunar Eclipse
+            -- Lunar Eclipse (Ancré à gauche)
             [48518] = {
-                texture = "Interface\\SpellActivationOverlay\\Eclipse_Moon",
-                offsetX = 120,
+                texture = 237561, -- FileDataID exact
+                offsetX = -120,
                 offsetY = 0,
             },
         },
         -- Future classes can be safely configured here
-        -- MAGE = { ... },
-        -- WARRIOR = { ... },
     }
 }

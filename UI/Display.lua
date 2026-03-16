@@ -6,7 +6,6 @@ PT.UI = PT.UI or {}
 local CreateFrame = CreateFrame
 local GetTime = GetTime
 local UIParent = UIParent
-local print = print
 local string = string
 local tonumber = tonumber
 
@@ -27,18 +26,20 @@ UpdatePosition()
 
 -- Texture Solaire
 PT.UI.solarTex = PT.UI.Frame:CreateTexture(nil, "OVERLAY")
-PT.UI.solarTex:SetSize(200, 200)
+PT.UI.solarTex:SetSize(120, 200)
 PT.UI.solarTex:SetPoint("LEFT", PT.UI.Frame, "CENTER", 50, 0)
 PT.UI.solarTex:SetTexture(nil)
 PT.UI.solarTex:SetBlendMode("ADD")
+PT.UI.solarTex:SetAlpha(0.6)
 PT.UI.solarTex:Hide()
 
 -- Texture Lunaire
 PT.UI.lunarTex = PT.UI.Frame:CreateTexture(nil, "OVERLAY")
-PT.UI.lunarTex:SetSize(200, 200)
+PT.UI.lunarTex:SetSize(120, 200)
 PT.UI.lunarTex:SetPoint("RIGHT", PT.UI.Frame, "CENTER", -50, 0)
 PT.UI.lunarTex:SetTexture(nil)
 PT.UI.lunarTex:SetBlendMode("ADD")
+PT.UI.lunarTex:SetAlpha(0.6)
 PT.UI.lunarTex:Hide()
 
 -- Timer Text
@@ -136,9 +137,6 @@ SlashCmdList["PROCTRACKER_X"] = function(msg)
     if val then
         PT_Config_Offset_X = val
         UpdatePosition()
-        print("ProcTracker: X Offset défini à", PT_Config_Offset_X)
-    else
-        print("ProcTracker: Erreur d'utilisation (/ptx nombre)")
     end
 end
 
@@ -148,9 +146,6 @@ SlashCmdList["PROCTRACKER_Y"] = function(msg)
     if val then
         PT_Config_Offset_Y = val
         UpdatePosition()
-        print("ProcTracker: Y Offset défini à", PT_Config_Offset_Y)
-    else
-        print("ProcTracker: Erreur d'utilisation (/pty nombre)")
     end
 end
 
@@ -159,8 +154,5 @@ SLASH_PROCTRACKER_ECLIPSE1 = "/pteclipse"
 SlashCmdList["PROCTRACKER_ECLIPSE"] = function(msg)
     if msg == "left" or msg == "right" then
         PT.Config.TotalEclipseTimerSide = msg:upper()
-        print("ProcTracker: Côté du timer d'Éclipse Totale configuré sur :", PT.Config.TotalEclipseTimerSide)
-    else
-        print("ProcTracker: Erreur d'utilisation (/pteclipse left ou /pteclipse right)")
     end
 end

@@ -22,19 +22,11 @@ local function UpdatePlayerAuras()
     local solarAura = C_UnitAuras.GetPlayerAuraBySpellID(48517)
     local lunarAura = C_UnitAuras.GetPlayerAuraBySpellID(48518)
 
-    -- Observabilité stricte telle que demandée avant
-    if solarAura ~= nil and solarAura.expirationTime then
-        print("ProcTracker: Eclipse Solaire active !")
-    end
-    if lunarAura ~= nil and lunarAura.expirationTime then
-        print("ProcTracker: Eclipse Lunaire active !")
-    end
-
     -- Appel vers l'UI avec vérification stricte (Null-safety)
     if PT and PT.UI and type(PT.UI.UpdateEclipseState) == "function" then
         PT.UI.UpdateEclipseState(solarAura, lunarAura)
     else
-        print("ProcTracker ERREUR : PT.UI.UpdateEclipseState est introuvable !")
+        print("|cFFFF0000[ProcTracker] ERREUR Critique :|r Module UI introuvable lors de l'appel d'événement.")
     end
 end
 
@@ -54,7 +46,6 @@ eventsFrame:SetScript("OnEvent", function(self, event, unitTarget)
 
     elseif event == "UNIT_AURA" then
         if unitTarget == "player" then
-            print("ProcTracker: UNIT_AURA déclenché")
             UpdatePlayerAuras()
         end
     end
